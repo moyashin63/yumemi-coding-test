@@ -1,5 +1,5 @@
 import React, { useContext, useState } from "react";
-import { PrefecturesContext } from "./PrefecturesProvider";
+//import { PrefecturesContext } from "./PrefecturesProvider";
 import {
   LineChart,
   Line,
@@ -49,7 +49,7 @@ const compositionTypeButtons = [
 
 // responsiveContainerを使うとグラフが表示されないところから再開
 const Graph = () => {
-  const { prefectures } = useContext(PrefecturesContext);
+  //const { prefectures } = useContext(PrefecturesContext);
   const [selectedCompositionType, setSelectedCompositionType] = useState("");
   const handleOptionClick = (option: string) => {
     setSelectedCompositionType(option);
