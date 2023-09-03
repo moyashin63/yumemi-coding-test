@@ -1,41 +1,104 @@
-"use client";
-import React from "react";
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer } from "recharts";
+import React, { useContext, useState } from "react";
+import { PrefecturesContext } from "./PrefecturesProvider";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
+import { scaleOrdinal } from "d3-scale";
+import { schemePaired } from "d3-scale-chromatic";
 
-//  「総人口」の他に「年少人口」「生産年齢人口」「老年人口」も切り替えるUIを何らかの形で用意し表示できるようにする（同時に表示する必要はない）
-// なので、使用する人口データの種別を切り替えるUIを用意する。
-// また、どの人口データを使用していても同じ関数で処理できるようにする。
+const data = {
+  prefectures: [
+    {
+      prefectureName: "北海道",
+      values: [
+        { year: 1980, value: 12817 },
+        { year: 1985, value: 10817 },
+        { year: 1990, value: 15817 },
+      ],
+    },
+    {
+      prefectureName: "青森県",
+      values: [
+        { year: 1980, value: 2817 },
+        { year: 1985, value: 7817 },
+        { year: 1990, value: 5817 },
+      ],
+    },
+    {
+      prefectureName: "山形県",
+      values: [
+        { year: 1980, value: 8817 },
+        { year: 1985, value: 3817 },
+        { year: 1990, value: 9817 },
+      ],
+    },
+  ],
+};
 
-const data = [
-  { name: "Page A", uv: 400, pv: 2400, amt: 2400 },
-  { name: "Page A", uv: 403, pv: 2402, amt: 2400 },
+const compositionTypeButtons = [
+  { id: "total", name: "総人口" },
+  { id: "young", name: "年少人口" },
+  { id: "productive", name: "生産年齢人口" },
+  { id: "elderly", name: "老年人口" },
 ];
 
 // responsiveContainerを使うとグラフが表示されないところから再開
 const Graph = () => {
+  const { prefectures } = useContext(PrefecturesContext);
+  const [selectedCompositionType, setSelectedCompositionType] = useState("");
+  const handleOptionClick = (option: string) => {
+    setSelectedCompositionType(option);
+  };
+
+  const years = data.prefectures[0].values.map((value) => value.year);
+  const colorScale = scaleOrdinal(schemePaired);
   return (
     <>
       <div
         style={{ width: "100%", height: "400px" }}
         className="m-4 p-8 w-full rounded-xl bg-gray-200"
       >
-        <ResponsiveContainer width={"100%"} height={"100%"}>
-          <LineChart width={1300} height={300} data={data}>
-            <Line type="monotone" dataKey="uv" stroke="#8884d8" />
+        <div className="flex justify-center">
+          {compositionTypeButtons.map((button) => (
+            <button
+              key={button.id}
+              className={`p-2 w-36 shadow-md mb-8
+              ${
+                selectedCompositionType === button.id
+                  ? "bg-gray-600 text-white"
+                  : "bg-gray-300 text-gray-500"
+              }`}
+              onClick={() => handleOptionClick(button.id)}
+            >
+              {button.name}
+            </button>
+          ))}
+        </div>
+        <ResponsiveContainer width={"100%"} height={"85%"}>
+          <LineChart data={years}>
             <XAxis
-              label={{
-                value: "年",
-                position: "insideBottom",
-              }}
+              type="number"
+              dataKey="year"
+              domain={["dataMin", "dataMax"]}
+              tickCount={years.length}
             />
-            <YAxis
-              label={{
-                value: "人口",
-                angle: -90,
-                position: "insideLeft",
-                //offset: -0,
-              }}
-            />
+            <YAxis />
+            <Legend />
+            {data.prefectures.map((prefecture, index) => (
+              <Line
+                key={prefecture.prefectureName}
+                type="linear"
+                dataKey="value"
+                data={prefecture.values}
+                name={prefecture.prefectureName}
+                stroke={colorScale(index.toString())}
+              />
+            ))}
           </LineChart>
         </ResponsiveContainer>
       </div>
