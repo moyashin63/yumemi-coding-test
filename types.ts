@@ -20,7 +20,7 @@ export type PopulationDataByPref = {
 export type SelectedData = {
   prefecture: Prefecture;
   data: PopulationDataByPref;
-}[];
+};
 
 export interface PrefectureListProps {
   prefectures: { prefecture: Prefecture; selected: boolean }[];
