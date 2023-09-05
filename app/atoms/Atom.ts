@@ -6,7 +6,7 @@ export const selectedPrefectureState = atom<Prefecture[]>({
   default: [],
 });
 
-export const selectedDataState = atom<SelectedData>({
+export const selectedDataState = atom<SelectedData | null>({
   key: "selectedDataState",
-  default: { data: [] },
+  default: null,
 });
