@@ -6,23 +6,21 @@ export type Prefecture = {
 // prettier-ignore
 export type PopulationDataByPref = {
   boundaryYear: number,
-  data: [
-    populationType: string, 
-    yearlyPopulation: [
+  data: {
+    data: {
       year: number, 
       value: number, 
-      rate?: number
-    ]
-  ]
+      rate?: number | undefined
+    }[];
+    label: string, 
+  }[];
 };
 
 // prettier-ignore
 export type SelectedData = {
-  data: [
-    prefecture: Prefecture, 
-    data: PopulationDataByPref
-  ];
-};
+  prefecture: Prefecture;
+  data: PopulationDataByPref;
+}[];
 
 export interface PrefectureListProps {
   prefectures: { prefecture: Prefecture; selected: boolean }[];

@@ -1,5 +1,8 @@
-import React, { useContext, useState } from "react";
-//import { PrefecturesContext } from "./PrefecturesProvider";
+import React, { useEffect, useState, useRef } from "react";
+import { getPopulationDataByPrefCode } from "@/api";
+import { PopulationDataByPref, Prefecture, SelectedData } from "@/types";
+import { useRecoilValue } from "recoil";
+import { selectedPrefectureState } from "../atoms/Atom";
 import {
   LineChart,
   Line,
@@ -11,34 +14,7 @@ import {
 import { scaleOrdinal } from "d3-scale";
 import { schemePaired } from "d3-scale-chromatic";
 
-const data = {
-  prefectures: [
-    {
-      prefectureName: "北海道",
-      values: [
-        { year: 1980, value: 12817 },
-        { year: 1985, value: 10817 },
-        { year: 1990, value: 15817 },
-      ],
-    },
-    {
-      prefectureName: "青森県",
-      values: [
-        { year: 1980, value: 2817 },
-        { year: 1985, value: 7817 },
-        { year: 1990, value: 5817 },
-      ],
-    },
-    {
-      prefectureName: "山形県",
-      values: [
-        { year: 1980, value: 8817 },
-        { year: 1985, value: 3817 },
-        { year: 1990, value: 9817 },
-      ],
-    },
-  ],
-};
+const selectedData: SelectedData = [];
 
 const compositionTypeButtons = [
   { id: "total", name: "総人口" },
@@ -47,16 +23,90 @@ const compositionTypeButtons = [
   { id: "elderly", name: "老年人口" },
 ];
 
-// responsiveContainerを使うとグラフが表示されないところから再開
 const Graph = () => {
-  //const { prefectures } = useContext(PrefecturesContext);
+  const [displayData, setDisplayData] = useState({
+    prefectures: [] as {
+      prefectureName: string;
+      values: { year: number; value: number; rate?: number | undefined }[];
+    }[],
+  });
+
+  const selectedPrefectures = useRecoilValue(
+    selectedPrefectureState
+  ) as Prefecture[];
+
+  const prevSelectedPrefecturesRef = useRef<Prefecture[]>([]);
+
+  useEffect(() => {
+    const fetchData = async (newPrefecture: Prefecture) => {
+      try {
+        const newPrefData = await getPopulationDataByPrefCode(
+          newPrefecture.prefCode
+        );
+        if (newPrefData.data[0].label === "総人口") {
+          const updatedData = {
+            ...displayData,
+            prefectures: [
+              ...displayData.prefectures,
+              {
+                prefectureName: newPrefecture.prefName,
+                values: newPrefData.data[0].data,
+              },
+            ],
+          };
+          setDisplayData(updatedData);
+          console.log(updatedData);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    if (
+      prevSelectedPrefecturesRef.current.length < selectedPrefectures.length
+    ) {
+      const addedPrefecture = selectedPrefectures.find((prefecture) => {
+        return !prevSelectedPrefecturesRef.current.some(
+          (prevPrefecture) => prevPrefecture.prefCode === prefecture.prefCode
+        );
+      });
+
+      if (addedPrefecture) {
+        fetchData(addedPrefecture);
+      }
+    } else {
+      const deletedPrefecture = prevSelectedPrefecturesRef.current.find(
+        (prefecture) => {
+          return !selectedPrefectures.some(
+            (prevPrefecture) => prevPrefecture.prefCode === prefecture.prefCode
+          );
+        }
+      );
+
+      const updatedData = {
+        ...displayData,
+
+        prefectures: displayData.prefectures.filter((prefecture) => {
+          // ここで条件を指定して削除したい要素をフィルタリングします
+          // この例では prefectureName が newPrefecture.prefName でない要素を残します
+          return prefecture.prefectureName !== deletedPrefecture?.prefName;
+        }),
+      };
+      setDisplayData(updatedData);
+      // 要素が減った場合の処理
+      // 例えば、prevSelectedPrefecturesRef.current から削除された要素の処理を行う
+    }
+    prevSelectedPrefecturesRef.current = selectedPrefectures;
+  }, [selectedPrefectures]);
+
   const [selectedCompositionType, setSelectedCompositionType] = useState("");
   const handleOptionClick = (option: string) => {
     setSelectedCompositionType(option);
   };
 
-  const years = data.prefectures[0].values.map((value) => value.year);
+  const years = displayData?.prefectures[0]?.values.map((value) => value.year);
   const colorScale = scaleOrdinal(schemePaired);
+
   return (
     <>
       <div
@@ -85,11 +135,11 @@ const Graph = () => {
               type="number"
               dataKey="year"
               domain={["dataMin", "dataMax"]}
-              tickCount={years.length}
+              tickCount={years?.length}
             />
             <YAxis />
             <Legend />
-            {data.prefectures.map((prefecture, index) => (
+            {displayData?.prefectures.map((prefecture, index) => (
               <Line
                 key={prefecture.prefectureName}
                 type="linear"

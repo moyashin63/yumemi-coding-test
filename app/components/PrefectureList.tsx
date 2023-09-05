@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { getAllPrefectures } from "@/api";
 import { useRecoilState } from "recoil";
-import { selectedPrefectureState } from "../atoms/SelectedPrefectureAtom";
+import { selectedPrefectureState } from "../atoms/Atom";
 import { Prefecture } from "@/types";
 
 interface FormattedData {
@@ -41,8 +41,15 @@ export default function PrefectureList() {
       if (prefecture.prefecture.prefCode === prefCode) {
         if (prefecture.selected === false) {
           console.log(prefecture.prefecture.prefName + "のデータを追加");
+          setSelectedPrefectures([
+            ...selectedPrefectures,
+            prefecture.prefecture,
+          ]);
         } else {
           console.log(prefecture.prefecture.prefName + "のデータを削除");
+          setSelectedPrefectures((prev) =>
+            prev.filter((pref) => pref.prefCode !== prefCode)
+          );
         }
         return { ...prefecture, selected: !prefecture.selected };
       } else {
