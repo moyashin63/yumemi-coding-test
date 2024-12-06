@@ -106,21 +106,18 @@ const Graph = () => {
         const dataForLabel = item.data.data.find(
           (data) => data.label === label
         );
-        return dataForLabel !== undefined; // ラベルに対応したデータが存在するかを確認
+        return dataForLabel !== undefined;
       })
       .map((item) => ({
         prefectureName: item.prefecture.prefName,
         values: item.data.data.find((data) => data.label === label)?.data || [],
       }));
-
     setDisplayData({ prefectures: newData });
   };
 
   const handleOptionClick = (option: { id: string; name: string }) => {
     setSelectedCompositionType(option.name);
-    updateDisplayData(option.name); //これなんかおおくない？
-    console.log(option.name);
-    console.log(selectedData);
+    updateDisplayData(option.name);
   };
 
   const years = displayData?.prefectures[0]?.values.map((value) => value.year);
